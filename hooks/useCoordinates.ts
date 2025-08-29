@@ -46,7 +46,7 @@ export const useCoordinates = () => {
                 };
                 
                 setCoordinates(coords);
-                alert("hello")
+                // alert("hello")
                 setIsLoading(false);
             },
             (error) => {

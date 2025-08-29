@@ -1,65 +1,46 @@
 "use client"
 
 import type React from "react"
-import { useRouter } from "next/navigation"
-
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAuth } from "@/contexts/AuthContext" // Adjust the import path as needed
+import { useRouter } from "next/navigation"
 
 export default function StudentLoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [form, setForm] = useState({ email: "", password: "" })
+  const [error, setError] = useState<string | null>(null)
+  const { signIn } = useAuth()
   const router = useRouter()
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setError(null)
     setLoading(true)
-    setError("")
-    
-    console.log('Attempting student login with:', form) // Debug log
-    
+
     try {
-      const res = await fetch("/api/auth/student/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
+      const { data, error } = await signIn(email, password)
       
-      console.log('Login response status:', res.status) // Debug log
-      
-      if (res.ok) {
-        const data = await res.json()
-        console.log('Login response data:', data) // Debug log
-        
-        // Check if session cookie was set
-        const cookies = document.cookie
-        console.log('Current cookies after login:', cookies) // Debug log
-        
-        // Wait a bit for the cookie to be set, then redirect
-        setTimeout(() => {
-          console.log('Redirecting to student dashboard...') // Debug log
-          router.push("/student")
-        }, 100)
+      if (error) {
+        setError(error.message)
       } else {
-        const errorData = await res.json()
-        console.error('Login failed:', errorData) // Debug log
-        setError("Invalid credentials")
+        // Check if we have a session after login
+        if (data?.session) {
+          router.push('/student') // Use Next.js router instead of window.location
+        } else {
+          setError('Login failed. Please try again.')
+        }
       }
-    } catch (error) {
-      console.error('Login error:', error) // Debug log
-      setError("An error occurred. Please try again.")
+    } catch (err: any) {
+      setError(err.message || "Failed to sign in")
     } finally {
       setLoading(false)
     }
-  }
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm({ ...form, [e.target.type === "email" ? "email" : "password"]: e.target.value })
   }
 
   return (
@@ -67,27 +48,59 @@ export default function StudentLoginPage() {
       <Card className="card">
         <CardHeader>
           <CardTitle className="heading">Student Login</CardTitle>
-          <CardDescription>Access your dashboard to scan QR and submit feedback.</CardDescription>
+          <CardDescription>Sign in to your account to access attendance and feedback.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="grid gap-4">
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+            
             <div className="grid gap-2">
               <Label htmlFor="student-email">Email</Label>
-              <Input id="student-email" type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@college.edu" required />
+              <Input 
+                id="student-email" 
+                type="email" 
+                placeholder="you@college.edu" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+              />
             </div>
+            
             <div className="grid gap-2">
               <Label htmlFor="student-password">Password</Label>
-              <Input id="student-password" type="password" name="password" value={form.password} onChange={handleChange} placeholder="••••••••" required />
+              <Input 
+                id="student-password" 
+                type="password" 
+                placeholder="••••••••" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
+              />
             </div>
-            {error && <div className="text-red-600 text-sm">{error}</div>}
-            <Button disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+            
+            <Button 
+              type="submit"
+              disabled={loading} 
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
+          
+          <div className="mt-4 text-center">
+            <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+              Forgot your password?
+            </Link>
+          </div>
+          
+          <p className="mt-4 text-sm text-muted-foreground text-center">
+            Don't have an account?{" "}
             <Link href="/student/signup" className="text-blue-600 hover:underline">
-              Create one
+              Sign up
             </Link>
           </p>
         </CardContent>

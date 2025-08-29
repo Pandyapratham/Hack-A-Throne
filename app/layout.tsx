@@ -4,7 +4,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Roboto, Roboto_Mono } from "next/font/google"
 import { Suspense } from "react"
 import "./globals.css"
-
+import { AuthProvider } from '../contexts/AuthContext';
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${roboto.variable} ${robotoMono.variable} antialiased`}>
       <body className={`min-h-screen bg-background text-foreground font-sans`}>
-        <Suspense fallback={null}>{children}</Suspense>
+      <AuthProvider> <Suspense fallback={null}>{children}</Suspense></AuthProvider>
         <Analytics />
       </body>
     </html>

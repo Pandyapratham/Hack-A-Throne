@@ -137,7 +137,7 @@ function QRScanner(props: QRScannerProps) {
 
                 // Check if we have valid coordinates
                 if (!hasCoordinates || !coordinates) {
-                    alert("Location access required. Please enable location services and try again.");
+                    // alert("Location access required. Please enable location services and try again.");
                     // Try to get location again
                     if (isGeolocationSupported) {
                         getCurrentPosition();
@@ -158,13 +158,13 @@ function QRScanner(props: QRScannerProps) {
                 console.log(`Distance: ${distance}m, Valid radius: ${validRadius}m`);
 
                 if (distance <= validRadius) {
-                    alert("Match found and location verified! You're checked in to the event.");
+                    // alert("Match found and location verified! You're checked in to the event.");
                     addParticipantToEventAttendees(matchedEvent.event_id, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
                 } else {
-                    alert(`You must be within ${validRadius}m of the event location. Current distance: ${Math.round(distance)}m`);
+                    // alert(`You must be within ${validRadius}m of the event location. Current distance: ${Math.round(distance)}m`);
                 }
             } else {
-                alert("No matching event found for this QR code.");
+                // alert("No matching event found for this QR code.");
             }
 
             props.onScan(scannedData);

@@ -1,25 +1,39 @@
 "use client"
 
 import type React from "react"
-
 import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { useAuth } from "../../../contexts/AuthContext"
 
 export default function StudentSignupPage() {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { signUp } = useAuth()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    // TODO: integrate real signup. For now simulate and redirect to student dashboard.
-    setTimeout(() => {
-      setLoading(false)
+    setError(null)
+
+    const formData = new FormData(e.currentTarget)
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+    const fullName = formData.get("fullName") as string
+
+    try {
+      await signUp(email, password)
+
+      alert("welcome");
       window.location.href = "/student"
-    }, 800)
+    } catch (err: any) {
+      setError(err.message || "Failed to create account")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -31,22 +45,51 @@ export default function StudentSignupPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="grid gap-4">
+            {error && (
+              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+                {error}
+              </div>
+            )}
+
             <div className="grid gap-2">
               <Label htmlFor="student-name">Full Name</Label>
-              <Input id="student-name" type="text" placeholder="Alex Johnson" required />
+              <Input
+                id="student-name"
+                name="fullName"
+                type="text"
+                placeholder="Alex Johnson"
+                required
+              />
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="student-email">Email</Label>
-              <Input id="student-email" type="email" placeholder="you@college.edu" required />
+              <Input
+                id="student-email"
+                name="email"
+                type="email"
+                placeholder="you@college.edu"
+                required
+              />
             </div>
+
             <div className="grid gap-2">
               <Label htmlFor="student-password">Password</Label>
-              <Input id="student-password" type="password" placeholder="••••••••" required />
+              <Input
+                id="student-password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
             </div>
+
             <Button disabled={loading} className="bg-blue-600 hover:bg-blue-700">
               {loading ? "Creating..." : "Create Account"}
             </Button>
           </form>
+
           <p className="mt-4 text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/student/login" className="text-blue-600 hover:underline">

@@ -4,11 +4,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { CheckCircle2, BarChart3, QrCode, MapPin } from "lucide-react"
+import { AuthProvider } from '../contexts/AuthContext';
 
 export default function Page() {
   return (
     <>
       <SiteNav />
+      
       <main className="mx-auto max-w-6xl px-4">
         <section className="py-12 md:py-20 text-center animate-in fade-in-50 slide-in-from-bottom-2 duration-700">
           <div className="mx-auto max-w-3xl">
