@@ -20,7 +20,7 @@ export default function Page() {
               actionable analytics.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/student/login">
+              {/* <Link href="/student/login">
                 <Button className="bg-primary hover:bg-primary/90 w-full sm:w-auto transition-transform hover:-translate-y-0.5 text-base md:text-lg">
                   Student Login
                 </Button>
@@ -37,7 +37,7 @@ export default function Page() {
                 <Button className="bg-accent hover:bg-accent/90 w-full sm:w-auto transition-transform hover:-translate-y-0.5 text-base md:text-lg">
                   Company Login
                 </Button>
-              </Link>
+              </Link> */}
             </div>
           </div>
           <div className="mt-10 animate-in fade-in-50 zoom-in-50 duration-700">

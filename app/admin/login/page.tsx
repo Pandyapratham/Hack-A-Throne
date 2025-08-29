@@ -9,17 +9,31 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
+
 export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [form, setForm] = useState({ email: "", password: "" })
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
-    // TODO: integrate real admin auth
-    setTimeout(() => {
-      setLoading(false)
+    setError("")
+    const res = await fetch("/api/auth/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    })
+    if (res.ok) {
       window.location.href = "/admin"
-    }, 700)
+    } else {
+      setError("Invalid credentials")
+    }
+    setLoading(false)
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setForm({ ...form, [e.target.type === "email" ? "email" : "password"]: e.target.value })
   }
 
   return (
@@ -33,12 +47,13 @@ export default function AdminLoginPage() {
           <form onSubmit={onSubmit} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="admin-email">Email</Label>
-              <Input id="admin-email" type="email" placeholder="admin@institute.edu" required />
+              <Input id="admin-email" type="email" name="email" value={form.email} onChange={handleChange} placeholder="admin@institute.edu" required />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="admin-password">Password</Label>
-              <Input id="admin-password" type="password" placeholder="••••••••" required />
+              <Input id="admin-password" type="password" name="password" value={form.password} onChange={handleChange} placeholder="••••••••" required />
             </div>
+            {error && <div className="text-red-600 text-sm">{error}</div>}
             <Button disabled={loading} className="bg-blue-600 hover:bg-blue-700">
               {loading ? "Signing in..." : "Sign In"}
             </Button>
