@@ -3,6 +3,7 @@
 import useSWR from "swr"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
+import { AuthWrapper } from "@/components/auth-wrapper"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
@@ -11,7 +12,7 @@ export default function AttendanceReport() {
   const { data } = useSWR("/api/attendance", fetcher)
 
   return (
-    <>
+    <AuthWrapper allowedRoles={["admin"]} redirectTo="/admin/login">
       <SiteNav />
       <main className="mx-auto max-w-6xl px-4 py-8 space-y-6">
         <h1 className="heading text-2xl font-semibold">Attendance Report</h1>
@@ -50,6 +51,6 @@ export default function AttendanceReport() {
         </Card>
       </main>
       <SiteFooter />
-    </>
+    </AuthWrapper>
   )
 }

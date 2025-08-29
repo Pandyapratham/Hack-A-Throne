@@ -2,7 +2,12 @@ import { cookies } from "next/headers"
 
 export async function setSession(role: "student" | "admin", id: string) {
   const c = await cookies();
-  c.set("session", JSON.stringify({ role, id }), { httpOnly: true, path: "/" })
+  c.set("session", JSON.stringify({ role, id }), { 
+    httpOnly: false, 
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax"
+  })
 }
 
 export async function getSession() {

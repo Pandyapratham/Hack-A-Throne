@@ -2,11 +2,17 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useSession } from "@/lib/use-session"
+import { Logo } from "@/components/logo"
+import { useMemo, useCallback } from "react"
 
 export function SiteNav() {
   const pathname = usePathname()
-  const navLink = (href: string, label: string) => (
+  const { session, logout } = useSession()
+  const router = useRouter()
+
+  const navLink = useCallback((href: string, label: string) => (
     <Link
       key={href}
       href={href}
@@ -18,53 +24,88 @@ export function SiteNav() {
     >
       {label}
     </Link>
-  )
+  ), [pathname])
 
-  return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top-2 duration-500">
-      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-        <Link href="/" aria-label="MARK-IT Home" className="group flex items-center gap-3">
-          {/* Symbol logo: circular checkbox */}
-          <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground ring-2 ring-primary/20 shadow-sm transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:shadow-lg">
-            <svg viewBox="0 0 24 24" className="h-5 w-5 text-primary-foreground" role="img" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
-              <path
-                d="M9.5 12.5l2 2.5 4-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            {/* soft accent pulse */}
-            <span className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-accent/20 animate-ping-slow" />
-          </span>
-          <span className="heading text-xl md:text-2xl font-semibold tracking-tight text-foreground transition-transform group-hover:translate-x-px">
-            MARK-IT
-          </span>
-        </Link>
+  const handleLogout = useCallback(async () => {
+    await logout()
+    router.push("/")
+    router.refresh()
+  }, [logout, router])
 
+  const renderNavItems = useMemo(() => {
+    if (!session) return null
+
+    if (session.role === "student") {
+      return (
         <nav className="hidden md:flex items-center gap-1">
           {navLink("/", "Home")}
           {navLink("/student", "Student")}
+          {navLink("/reports", "Reports")}
+        </nav>
+      )
+    }
+
+    if (session.role === "admin") {
+      return (
+        <nav className="hidden md:flex items-center gap-1">
+          {navLink("/", "Home")}
           {navLink("/admin", "Admin")}
           {navLink("/company", "Company")}
           {navLink("/reports", "Reports")}
         </nav>
+      )
+    }
 
-        <div className="flex items-center gap-2">
-          <Link href="/student/login">
-            <Button className="bg-primary hover:bg-primary/90 transition-transform hover:-translate-y-0.5 text-base">
-              Student Login
-            </Button>
-          </Link>
-          <Link href="/admin/login">
-            <Button className="bg-primary hover:bg-primary/90 transition-transform hover:-translate-y-0.5 text-base">
-              Faculty/Admin Login
-            </Button>
-          </Link>
-        </div>
+    return null
+  }, [session, navLink])
+
+  const userInfo = useMemo(() => {
+    if (!session) return null
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground">
+          {session.role === "admin" ? "Admin" : "Student"} logged in
+        </span>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleLogout}
+          className="text-xs"
+        >
+          Logout
+        </Button>
+      </div>
+    )
+  }, [session, handleLogout])
+
+  const loginButtons = useMemo(() => (
+    <div className="flex items-center gap-2">
+      <Link href="/student/login">
+        <Button className="bg-primary hover:bg-primary/90 transition-transform hover:-translate-y-0.5 text-base">
+          Student Login
+        </Button>
+      </Link>
+      <Link href="/admin/login">
+        <Button className="bg-primary hover:bg-primary/90 transition-transform hover:-translate-y-0.5 text-base">
+          Faculty/Admin Login
+        </Button>
+      </Link>
+    </div>
+  ), [])
+
+  return (
+    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top-2 duration-500">
+      <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+        <Logo variant="navbar" />
+
+        {session ? (
+          <>
+            {renderNavItems}
+            {userInfo}
+          </>
+        ) : (
+          loginButtons
+        )}
       </div>
     </header>
   )

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
+import { AuthWrapper } from "@/components/auth-wrapper"
 
 const categories = ["Session Relevance", "Speaker Quality", "Content Depth"] as const
 
@@ -27,7 +28,7 @@ export default function FeedbackPage() {
   }
 
   return (
-    <>
+    <AuthWrapper allowedRoles={["student"]} redirectTo="/student/login">
       <SiteNav />
       <main className="mx-auto max-w-2xl px-4 py-8 space-y-6">
         <h1 className="heading text-2xl font-semibold">Feedback</h1>
@@ -81,6 +82,6 @@ export default function FeedbackPage() {
         </Card>
       </main>
       <SiteFooter />
-    </>
+    </AuthWrapper>
   )
 }

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
+import { AuthWrapper } from "@/components/auth-wrapper"
 import { CheckCircle2, MapPin } from "lucide-react"
 
 export default function ScanPage() {
@@ -26,7 +27,7 @@ export default function ScanPage() {
   }
 
   return (
-    <>
+    <AuthWrapper allowedRoles={["student"]} redirectTo="/student/login">
       <SiteNav />
       <main className="mx-auto max-w-3xl px-4 py-8 space-y-6">
         <h1 className="heading text-2xl font-semibold">Scan QR Code</h1>
@@ -57,6 +58,6 @@ export default function ScanPage() {
         )}
       </main>
       <SiteFooter />
-    </>
+    </AuthWrapper>
   )
 }

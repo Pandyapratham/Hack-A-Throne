@@ -3,6 +3,7 @@
 import useSWR from "swr"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
+import { AuthWrapper } from "@/components/auth-wrapper"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { RatingsBar } from "@/components/charts/ratings-bar"
 import { SentimentPie } from "@/components/charts/sentiment-pie"
@@ -13,10 +14,13 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 export default function AnalyticsPage() {
   const { data } = useSWR("/api/analytics", fetcher)
 
-  const sentiments = data?.sentiments ? Object.entries(data.sentiments).map(([name, value]) => ({ name, value })) : []
+  const sentiments = data?.sentiments ? Object.entries(data.sentiments).map(([name, value]) => ({ 
+    name, 
+    value: typeof value === 'number' ? value : 0 
+  })) : []
 
   return (
-    <>
+    <AuthWrapper allowedRoles={["admin"]} redirectTo="/admin/login">
       <SiteNav />
       <main className="mx-auto max-w-6xl px-4 py-8 space-y-6">
         <h1 className="heading text-2xl font-semibold">Feedback Analytics</h1>
@@ -44,6 +48,6 @@ export default function AnalyticsPage() {
         </section>
       </main>
       <SiteFooter />
-    </>
+    </AuthWrapper>
   )
 }

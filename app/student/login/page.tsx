@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useRouter } from "next/navigation"
 
 import Link from "next/link"
 import { useState } from "react"
@@ -9,27 +10,52 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-
 export default function StudentLoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState({ email: "", password: "" })
+  const router = useRouter()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError("")
-    const res = await fetch("/api/auth/student/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    })
-    if (res.ok) {
-      window.location.href = "/student"
-    } else {
-      setError("Invalid credentials")
+    
+    console.log('Attempting student login with:', form) // Debug log
+    
+    try {
+      const res = await fetch("/api/auth/student/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      
+      console.log('Login response status:', res.status) // Debug log
+      
+      if (res.ok) {
+        const data = await res.json()
+        console.log('Login response data:', data) // Debug log
+        
+        // Check if session cookie was set
+        const cookies = document.cookie
+        console.log('Current cookies after login:', cookies) // Debug log
+        
+        // Wait a bit for the cookie to be set, then redirect
+        setTimeout(() => {
+          console.log('Redirecting to student dashboard...') // Debug log
+          router.push("/student")
+        }, 100)
+      } else {
+        const errorData = await res.json()
+        console.error('Login failed:', errorData) // Debug log
+        setError("Invalid credentials")
+      }
+    } catch (error) {
+      console.error('Login error:', error) // Debug log
+      setError("An error occurred. Please try again.")
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {

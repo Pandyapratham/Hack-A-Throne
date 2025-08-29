@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useRouter } from "next/navigation"
 
 import Link from "next/link"
 import { useState } from "react"
@@ -14,6 +15,7 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [form, setForm] = useState({ email: "", password: "" })
+  const router = useRouter()
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,7 +27,10 @@ export default function AdminLoginPage() {
       body: JSON.stringify(form),
     })
     if (res.ok) {
-      window.location.href = "/admin"
+      // Reduced timeout for faster redirect
+      setTimeout(() => {
+        router.push("/admin")
+      }, 50)
     } else {
       setError("Invalid credentials")
     }
