@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
-
+import QRScanner from "../../components/QRScanner";
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function StudentPortal() {
   const { data: events } = useSWR("/api/events", fetcher)
-
+  function handleScan(data: string) {
+    // alert("Scanned QR: " + data);
+  }
   return (
     <>
       <SiteNav />
@@ -24,9 +26,9 @@ export default function StudentPortal() {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">Use the QR scanner to mark your attendance.</p>
-              <Link href="/student/scan">
-                <Button className="bg-blue-600 hover:bg-blue-700">Open Scanner</Button>
-              </Link>
+              
+              <QRScanner onScan={handleScan} />
+              
             </CardContent>
           </Card>
           <Card>
