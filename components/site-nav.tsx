@@ -60,8 +60,8 @@ export function SiteNav() {
             </Button>
           </Link>
           <Link href="/admin/login">
-            <Button variant="outline" className="transition-transform hover:-translate-y-0.5 bg-transparent text-base">
-              Admin
+            <Button className="bg-primary hover:bg-primary/90 transition-transform hover:-translate-y-0.5 text-base">
+              Faculty/Admin Login
             </Button>
           </Link>
         </div>
