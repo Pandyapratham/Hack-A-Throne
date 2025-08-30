@@ -2,12 +2,12 @@
 
 import type React from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "@/contexts/AuthContext" // Adjust the import path as needed
+import { useAuth } from "@/contexts/AuthContext"
 import { useRouter } from "next/navigation"
 
 export default function StudentLoginPage() {
@@ -15,8 +15,16 @@ export default function StudentLoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signIn } = useAuth()
+  const { signIn, session, user, loading: authLoading } = useAuth()
   const router = useRouter()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (session && user && !authLoading) {
+      console.log('User already authenticated, redirecting to student page')
+      router.push('/student')
+    }
+  }, [session, user, authLoading, router])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -24,23 +32,66 @@ export default function StudentLoginPage() {
     setLoading(true)
 
     try {
+      console.log('Attempting to sign in with:', email)
+
+      // Basic validation
+      if (!email || !password) {
+        setError('Please enter both email and password')
+        return
+      }
+
       const { data, error } = await signIn(email, password)
-      
+
       if (error) {
-        setError(error.message)
+        console.error('Sign in error:', error)
+
+        // Handle specific Supabase errors
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.')
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Please check your email and confirm your account before signing in.')
+        } else if (error.message.includes('Too many requests')) {
+          setError('Too many login attempts. Please wait a moment and try again.')
+        } else {
+          setError(error.message || 'Login failed. Please try again.')
+        }
       } else {
-        // Check if we have a session after login
+        console.log('Sign in successful:', data)
+        // The AuthContext will handle setting the session cookie
+        // and the useEffect above will handle the redirect
         if (data?.session) {
-          router.push('/student') // Use Next.js router instead of window.location
+          console.log('Session created, redirecting...')
+          router.push('/student')
         } else {
           setError('Login failed. Please try again.')
         }
       }
     } catch (err: any) {
-      setError(err.message || "Failed to sign in")
+      console.error('Unexpected error during sign in:', err)
+
+      // Handle network or configuration errors
+      if (err.message?.includes('fetch')) {
+        setError('Network error. Please check your connection and try again.')
+      } else if (err.message?.includes('Supabase')) {
+        setError('Authentication service error. Please check your configuration.')
+      } else {
+        setError(err.message || "Failed to sign in")
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Checking authentication...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -57,46 +108,46 @@ export default function StudentLoginPage() {
                 {error}
               </div>
             )}
-            
+
             <div className="grid gap-2">
               <Label htmlFor="student-email">Email</Label>
-              <Input 
-                id="student-email" 
-                type="email" 
-                placeholder="you@college.edu" 
+              <Input
+                id="student-email"
+                type="email"
+                placeholder="you@college.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required 
+                required
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="student-password">Password</Label>
-              <Input 
-                id="student-password" 
-                type="password" 
-                placeholder="••••••••" 
+              <Input
+                id="student-password"
+                type="password"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required 
+                required
               />
             </div>
-            
-            <Button 
+
+            <Button
               type="submit"
-              disabled={loading} 
+              disabled={loading}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          
+
           <div className="mt-4 text-center">
             <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
               Forgot your password?
             </Link>
           </div>
-          
+
           <p className="mt-4 text-sm text-muted-foreground text-center">
             Don't have an account?{" "}
             <Link href="/student/signup" className="text-blue-600 hover:underline">

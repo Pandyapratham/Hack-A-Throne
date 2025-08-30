@@ -239,8 +239,8 @@ function QRScanner(props: QRScannerProps) {
         <div className="flex flex-col items-center max-w-md mx-auto px-4 py-8 bg-white rounded-xl shadow-lg">
             <h2 className="text-lg font-semibold mb-4">QR Code Scanner</h2>
 
-            {/* Location Status */}
-            <LocationStatus />
+            {/* Location Status
+            <LocationStatus /> */}
 
             {!scanning ? (
                 <button

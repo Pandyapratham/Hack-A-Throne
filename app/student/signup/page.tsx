@@ -2,22 +2,34 @@
 
 import type React from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useAuth } from "../../../contexts/AuthContext"
+import { useAuth } from "@/contexts/AuthContext"
+import { useRouter } from "next/navigation"
 
 export default function StudentSignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { signUp } = useAuth()
+  const [message, setMessage] = useState<string | null>(null)
+  const { signUp, session, user, loading: authLoading } = useAuth()
+  const router = useRouter()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (session && user && !authLoading) {
+      console.log('User already authenticated, redirecting to student page')
+      router.push('/student')
+    }
+  }, [session, user, authLoading, router])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setMessage(null)
 
     const formData = new FormData(e.currentTarget)
     const email = formData.get("email") as string
@@ -25,15 +37,45 @@ export default function StudentSignupPage() {
     const fullName = formData.get("fullName") as string
 
     try {
-      await signUp(email, password)
+      console.log('Attempting to sign up with:', email)
+      const { data, error } = await signUp(email, password)
 
-      alert("welcome");
-      window.location.href = "/student"
+      if (error) {
+        console.error('Sign up error:', error)
+        setError(error.message)
+      } else {
+        console.log('Sign up successful:', data)
+        if (data?.session) {
+          // User is immediately signed in
+          setMessage("Account created successfully! Redirecting...")
+          setTimeout(() => {
+            router.push('/student')
+          }, 1500)
+        } else if (data?.user && !data.session) {
+          // Email confirmation required
+          setMessage("Account created! Please check your email to confirm your account before signing in.")
+        } else {
+          setError('Signup failed. Please try again.')
+        }
+      }
     } catch (err: any) {
+      console.error('Unexpected error during sign up:', err)
       setError(err.message || "Failed to create account")
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Checking authentication...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -48,6 +90,12 @@ export default function StudentSignupPage() {
             {error && (
               <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
                 {error}
+              </div>
+            )}
+
+            {message && (
+              <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+                {message}
               </div>
             )}
 

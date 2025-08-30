@@ -6,23 +6,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
-import { useSession } from "@/lib/use-session"
+import { useAuth } from "@/contexts/AuthContext"
 import { useMemo } from "react"
-import QRScanner from "../../components/QRScanner";
+import QRScanner from "../../components/QRScanner"
+import { AuthStatus } from "@/components/auth-status"
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function StudentPortal() {
-  const { session, loading } = useSession()
+  const { session, user, loading } = useAuth()
   const { data: events } = useSWR("/api/events", fetcher)
-  
+
   const handleScan = useMemo(() => (data: string) => {
     // alert("Scanned QR: " + data);
   }, [])
 
   const eventsList = useMemo(() => {
     if (!events?.events) return <li className="text-muted-foreground">Loading events…</li>
-    
+
     return events.events.map((ev: any) => (
       <li key={ev.id} className="flex items-center justify-between border rounded-md p-2">
         <div>
@@ -48,12 +49,12 @@ export default function StudentPortal() {
     )
   }
 
-  if (!session || session.role !== "student") {
+  if (!session || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Access Denied</h2>
-          <p className="mb-4">You need to be logged in as a student to access this page.</p>
+          <p className="mb-4">You need to be logged in to access this page.</p>
           <Link href="/student/login">
             <Button>Go to Student Login</Button>
           </Link>
@@ -66,7 +67,13 @@ export default function StudentPortal() {
     <>
       <SiteNav />
       <main className="mx-auto max-w-6xl px-4 py-8 space-y-6">
-        <h1 className="heading text-2xl font-semibold">Student Portal</h1>
+        {/* <h1 className="heading text-2xl font-semibold">Student Portal</h1> */}
+
+        {/* Debug component - remove in production
+        <div className="mb-6">
+          <AuthStatus />
+        </div> */}
+
         <section className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
@@ -74,9 +81,9 @@ export default function StudentPortal() {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">Use the QR scanner to mark your attendance.</p>
-              
+
               <QRScanner onScan={handleScan} />
-              
+
             </CardContent>
           </Card>
           <Card>
