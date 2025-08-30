@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "../../../utils/supabaseClient";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { SiteNav } from "@/components/site-nav"
 import { SiteFooter } from "@/components/site-footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,10 +26,12 @@ interface EventForm {
 
 export default function EventsPage() {
   const router = useRouter()
+  const supabase = createClientComponentClient()
   const [eventId, setEventId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<string>("")
 
   const [form, setForm] = useState<EventForm>({
     title: "",
@@ -42,6 +44,15 @@ export default function EventsPage() {
     valid_radius_meters: 100, // Default 100 meters
     qr_code_data: ""
   })
+
+  // Debug authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      setDebugInfo(`Session: ${session ? 'Found' : 'Not found'}, User: ${session?.user?.id || 'None'}`)
+    }
+    checkAuth()
+  }, [])
 
   const handleInputChange = (field: keyof EventForm, value: string | number) => {
     setForm(prev => ({
@@ -90,6 +101,24 @@ export default function EventsPage() {
     return true
   }
 
+  const testSupabaseConnection = async () => {
+    try {
+      setDebugInfo("Testing connection...")
+      const { data, error } = await supabase.from('events').select('count', { count: 'exact', head: true })
+
+      if (error) {
+        setDebugInfo(`Connection failed: ${error.message}`)
+        setError(`Database connection error: ${error.message}`)
+      } else {
+        setDebugInfo(`Connection successful! Events count: ${data.length}`)
+        setSuccess("Database connection is working!")
+      }
+    } catch (err) {
+      console.error('Connection test error:', err)
+      setDebugInfo(`Connection test failed: ${err}`)
+    }
+  }
+
   const generateQRCode = async () => {
     if (!validateForm()) return
 
@@ -98,12 +127,19 @@ export default function EventsPage() {
     setSuccess(null)
 
     try {
-      // Get current user for admin ID
-      // const { data: { user }, error: userError } = await supabase.auth.getUser()
+      // Check authentication first
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
 
-      // if (userError || !user) {
-      //   throw new Error("User not authenticated")
-      // }
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        throw new Error(`Authentication error: ${sessionError.message}`)
+      }
+
+      if (!session || !session.user) {
+        throw new Error("User not authenticated. Please log in again.")
+      }
+
+      console.log('User authenticated:', session.user.id)
 
       // Generate QR code data
       const qrData = `event-${form.title.toLowerCase().replace(/\s+/g, "-").slice(0, 12)}-${Date.now()}`
@@ -119,35 +155,56 @@ export default function EventsPage() {
         location_longitude: form.location_longitude,
         valid_radius_meters: form.valid_radius_meters,
         qr_code_data: qrData,
-        created_by_admin_id: '11111111-1111-1111-1111-111111111111'
+        created_by_admin_id: session.user.id
       }
+
+      console.log('Attempting to insert event data:', eventData)
+
       // Insert into Supabase
       const { data, error } = await supabase
-      .from('events')
-      .insert([eventData])
-      .select()
-      .single()
-      
+        .from('events')
+        .insert([eventData])
+        .select('*')
+        .single()
+
+      console.log('Supabase response:', { data, error })
+
       if (error) {
-        throw error
+        console.error('Supabase error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw new Error(`Database error: ${error.message}`)
       }
-      
+
+      if (!data) {
+        throw new Error("No data returned from database")
+      }
+
+      console.log('Event created successfully:', data)
+
       // Update local state
       setEventId(data.event_id)
-      alert("idhar nahi  poch");
       setForm(prev => ({ ...prev, qr_code_data: qrData }))
       setSuccess("Event created successfully!")
 
     } catch (err) {
-      console.error('Error creating event:', err)
-      setError(err instanceof Error ? err.message : "Failed to create event")
+      console.error('Full error object:', err)
+
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("An unexpected error occurred. Check console for details.")
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
   const navigateToDashboard = () => {
-    router.push('/admin/')
+    router.push('/admin/dashboard')
   }
 
   const resetForm = () => {
@@ -181,6 +238,13 @@ export default function EventsPage() {
             Go to Dashboard
           </Button>
         </div>
+
+        {/* Debug Information */}
+        {debugInfo && (
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertDescription className="text-blue-800">Debug: {debugInfo}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Alert Messages */}
         {error && (

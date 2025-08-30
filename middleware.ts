@@ -6,13 +6,13 @@ const protectedAdmin = ["/admin", "/admin/events", "/admin/attendance", "/admin/
 export function middleware(req: NextRequest) {
   const session = req.cookies.get("session")?.value
   const url = req.nextUrl
-  
+
   // Allow login and signup pages for both roles
   const allowed = [
     "/student/login", "/student/signup",
     "/admin/login", "/admin/signup"
   ]
-  
+
   if (allowed.includes(url.pathname)) {
     // If already logged in, redirect to dashboard
     if (session) {
@@ -30,7 +30,7 @@ export function middleware(req: NextRequest) {
     }
     return NextResponse.next()
   }
-  
+
   if (!session) {
     // If not logged in, redirect to login for protected routes
     if (protectedStudent.some((p) => url.pathname.startsWith(p))) {
@@ -41,10 +41,10 @@ export function middleware(req: NextRequest) {
     }
     return NextResponse.next()
   }
-  
+
   try {
     const { role } = JSON.parse(session)
-    
+
     // Validate role
     if (!role || (role !== "student" && role !== "admin")) {
       console.error('Invalid role in session cookie:', role)
@@ -53,7 +53,7 @@ export function middleware(req: NextRequest) {
       response.cookies.delete("session")
       return response
     }
-    
+
     // Check role-based access
     if (role === "student" && protectedAdmin.some((p) => url.pathname.startsWith(p))) {
       return NextResponse.redirect(new URL("/student", req.url))
@@ -68,7 +68,7 @@ export function middleware(req: NextRequest) {
     response.cookies.delete("session")
     return response
   }
-  
+
   return NextResponse.next()
 }
 

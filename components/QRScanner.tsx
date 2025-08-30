@@ -109,7 +109,7 @@ function QRScanner(props: QRScannerProps) {
             Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-        return R * c; // Distance in meters
+        return R * c; 
     }
 
     function captureFrame() {
@@ -151,20 +151,20 @@ function QRScanner(props: QRScannerProps) {
                 const validRadius = matchedEvent.valid_radius_meters;
                 const userLat = coordinates.latitude;
                 const userLng = coordinates.longitude;
-                console.log( " userLat:"+userLat + "userLng" + "eventLat"+eventLat + "eventLng" +eventLng)
+                console.log(" userLat:" + userLat + "userLng" + "eventLat" + eventLat + "eventLng" + eventLng)
                 // Calculate distance between user and event location
                 const distance = calculateDistance(userLat, userLng, eventLat, eventLng);
 
                 console.log(`Distance: ${distance}m, Valid radius: ${validRadius}m`);
 
                 if (distance <= validRadius) {
-                    // alert("Match found and location verified! You're checked in to the event.");
-                    addParticipantToEventAttendees(matchedEvent.event_id, 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
+                    alert("Match found and location verified! You're checked in to the event.");
+                    addParticipantToEventAttendees(matchedEvent.event_id, 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa');
                 } else {
-                    // alert(`You must be within ${validRadius}m of the event location. Current distance: ${Math.round(distance)}m`);
+                    alert(`You must be within ${validRadius}m of the event location. Current distance: ${Math.round(distance)}m`);
                 }
             } else {
-                // alert("No matching event found for this QR code.");
+                alert("No matching event found for this QR code.");
             }
 
             props.onScan(scannedData);
@@ -285,7 +285,7 @@ function QRScanner(props: QRScannerProps) {
                 </div>
             )}
 
-           
+
         </div>
     );
 }
